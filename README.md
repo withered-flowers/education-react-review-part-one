@@ -673,9 +673,50 @@ Langkah pengerjaannya adalah:
     export default FormAddRepository;
     ```
 
-### Langkah 3 - Wiring React dengan API Github dengan Axios
+Sampai di titik ini artinya kita sudah berhasil untuk membuat seluruh Component yang dibutuhkan untuk dihubungkan ke API Github.
+
+Langkah selanjutnya adalah kita akan mencoba untuk membuat kode untuk melakukan penghubungan dengan API Github kemudian akan kita Wiring dengan aplikasi React yang kita buat.
+
+### Langkah 3 - Connect ke API Github dengan Axios
 
 Untuk membaca tentang API dari Github dapat membuka dokumentasi yang ada di sini yah:
 - [Getting Started](https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api)
 - [Listing Repos](https://docs.github.com/en/rest/repos/repos#list-repositories-for-the-authenticated-user)
 - [Buat Repo Baru](https://docs.github.com/en/rest/repos/repos#create-a-repository-for-the-authenticated-user)
+
+Pada langkah ini kita akan membuat kode untuk menembak ke API Github dengan menggunakan `axios`.
+
+Karena hampir seluruh dari `tembakan` (`request`) API ini harus menggunakan `Personal Access Token` dari Github yang akan dijadikan sebagai `Bearer Authentication` (nama header: `Authorization`), maka, supaya kode kita menjadi lebih pendek, kita akan menggunakan `axios instance` saja.
+
+Untuk dokumentasi tentang pembuatan `axios instance` bisa dibaca pada dokumentasi [Axios Instance](https://www.npmjs.com/package/axios#creating-an-instance).
+
+Langkah pembuatannya adalah sebagai berikut:
+1. Buat file `/src/apis/github.js`
+1. Modifikasi kode menjadi sebagai berikut:
+    ```js
+    import axios from "axios";
+
+    const personalAccessToken = "MASUKKAN_TOKEN_PAT_DISINI";
+
+    const instance = axios.create({
+      baseURL: "https://api.github.com",
+      // Setiap kali kita menembak ke github,
+      // Maka headers ini akan selalu diberikan
+      headers: {
+        // Pada dokumentasi Github,
+        // untuk melakukan Authentication harus memberikan headers Authorization
+        // dalam bentuk bearer token dan tokennya adalah personal access token
+        Authorization: `Bearer ${personalAccessToken}`,
+        // Pada dokumentasi Github juga direkomendasikan
+        // untuk memberikan header tambahan ini
+        // dalam setiap request / tembakan yang ada
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    export default instance;
+    ```
+
+Sampai di langkah ini artinya kita sudah membuat koneksi ke Github via axios instance ini. Selanjutnya kita akan menyelesaikannya dengan menghubungkannya dengan aplikasi React yang dibuat
+
+### Langkah 4 - Wiring dengan React
