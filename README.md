@@ -1,70 +1,259 @@
-# Getting Started with Create React App
+# Education React Project Github
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Table of Content
+- Disclaimer
+- Deskripsi
+- Mari Kita Buat
+    - Langkah 0 - Create React App
+    - Langkah 1 - Inisialisasi Token Github
+    - Langkah 2 - Membuat Kerangka Aplikasi
+    - Langkah 3 - Wiring React dengan API Github dengan Axios
 
-## Available Scripts
+## Disclaimer
+Karena pembelajaran ini bersifat review, maka akan ada lebih sedikit comment pada kode dibandingkan pembelajaran sebelumnya, apabila dirasa bingung dengan kode yang ada, maka sebaiknya harus mempelajari dasar React-nya terlebih dahulu sebelum melihat pembelajaran ini !
 
-In the project directory, you can run:
+## Deskripsi
 
-### `npm start`
+Pada pembelajaran ini kita akan mencoba untuk membuat aplikasi sederhana pada react yang menggabungkan beberapa elemen React di dalamnya seperti:
+- Component
+- Hooks
+- Navigation: React Router
+- Data Fetcher: Axios
+- UI Framework: MUI
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Hasil akhir dari project ini adalah sebuah aplikasi yang menggunakan Personal Access Token dari Github untuk bisa membaca repository yang dimiliki sendiri serta dapat membuat repository berbasis nodejs secara mandiri dari aplikasi yang dibuat.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Mari kita buat !
 
-### `npm test`
+Langkah-langkahnya adalah sebagai berikut:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Langkah 0 - Create React App
+1. Buka `terminal` / `cmd` / `git bash` yang digunakan
+1. Ketik perintah `npx create-react-app project-github-fetcher` 
+1. Tunggu sampai CRA nya selesai...
+1. Masuk ke dalam folder CRA tersebut dengan perintah `cd project-github-fetcher`
+1. Install package tambahan yang diperlukan (axios) dengan perintah `npm i axios`
+1. Install package tambahan yang diperlukan (MUI) dengan perintah `npm i @mui/material @emotion/react @emotion/styled`
+1. Install package tambahan yang diperlukan (React Router) dengan perintah `npm i react-router-dom@6`
 
-### `npm run build`
+Sampai di titik ini artinya kita sudah selesai untuk menginisialisasi project.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Selanjutnya kita akan meminta `Personal Access Token` dari Github berdasarkan akun pribadi Github yang dimiliki.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Langkah 1 - Inisialisasi Token Github 
+1. Buka halaman [github](https://github.com) dan sign-in terlebih dahulu
+1. Buka halaman [Personal access tokens](https://github.com/settings/tokens) lalu pilih `Generate new token`
+1. Berikan `note` yang menjelaskan kegunaan token ini. Dalam pembelajaran ini hanya menuliskan `Untuk belajar React` saja
+1. Untuk expiration silahkan dipilih sesuatu kebutuhan, dalam pembelajaran ini menggunakan expiration `custom` - 1 hari saja
+1. Selanjutnya kita akan memilih scope apa saja yang dapat dilakukan dengan menggunakan token yang dimiliki. Scope adalah batasan yang dapat dipilih, biasanya berbeda antar API. Scope yang digunakan dalam pembelajaran ini adalah:
+    - `repo`
+    - `delete_repo`
+1. Setelah selesai tekan tombol `Generate token`
+1. Selanjutnya Github akan memberikan token untuk dapat kita gunakan. **CATAT** token tersebut baik baik karena hanya akan diperlihatkan **SEKALI** saja. Apabila hilang, harus **GENERATE ULANG** token yang diberikan !
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Sampai di titik ini artinya kita sudah berhasil Generate token dari Github.
 
-### `npm run eject`
+Selanjutnya kita akan membuat component React yang akan digunakan dalam aplikasi ini nantinya.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+(Tenang, kita tidak menggunakan `useReducer` untuk mempersingkat alur pembuatan aplikasi !)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Langkah 2 - Membuat Kerangka Aplikasi
+Dalam aplikasi ini kita akan membuat 3 Route utama, yaitu:
+- `/` - yang berisi beberapa Link, untuk menuju `/list` dan `/add`
+- `/list` - yang berisi Listing dari repository yang dimiliki, baik `public` maupun `private` repository
+- `/add` - yang berisi sebuah Form untuk membuat sebuah repository `NodeJS` yang baru, yang dapat memilih apakah sifatnya `public` ataupun `private` repository
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### Langkah 2.0 - Memodifikasi Template CRA
+Pada langkah ini kita akan memodifikasi template CRA bawaan sehingga menjadi blank page saja.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. Buka file `index.js` dan comment perintah `import ./index.css`, `import App from ./App` dan `<App />`
+    ```JSX
+    import React from "react";
+    import ReactDOM from "react-dom/client";
+    // import './index.css';
+    // import App from "./App";
+    import reportWebVitals from "./reportWebVitals";
 
-## Learn More
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(
+      <React.StrictMode>
+        {/* <App /> */}
+      </React.StrictMode>
+    );
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    // If you want to start measuring performance in your app, pass a function
+    // to log results (for example: reportWebVitals(console.log))
+    // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+    reportWebVitals();
+    ```
+1. Modifikasi file `App.js` untuk tidak menampilkan apa apa (akan dimodifikasi nanti)
+    ```JSX
+    import React from "react";
+    // import logo from './logo.svg';
+    // import './App.css';
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+    function App() {
+      return <div className="App"></div>;
+    }
 
-### Code Splitting
+    export default App;
+    ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### Langkah 2.1 - Dummy Component
+Pada langkah ini kita akan membuat Component yang kosongan terlebih dahulu, hanya agar dapat membuat `Route` nya
 
-### Analyzing the Bundle Size
+1. Buat folder `/src/components` dan `/src/containers`
+1. Buat file `/src/components/NavBar.jsx` dan menuliskan kode dasar sebagai berikut:
+    ```JSX
+    import React from "react";
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+    const NavBar = () => {
+      return (
+        <>
+          <h1>NavBar</h1>
+        </>
+      );
+    };
 
-### Making a Progressive Web App
+    export default NavBar;
+    ```
+1. Buat file `/src/containers/ListRepositories.jsx` dan menuliskan kode dasar sebagai berikut:
+    ```JSX
+    import React from "react";
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+    const ListRepositories = () => {
+      return (
+        <>
+          <h1>ListRepositories</h1>
+        </>
+      );
+    };
 
-### Advanced Configuration
+    export default ListRepositories;
+    ```
+1. Buat file `/src/containers/FormAddRepository.jsx` dan menulikan kode dasar sebagai berikut:
+    ```JSX
+    import React from "react";
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+    const FormAddRepository = () => {
+      return (
+        <>
+          <h1>FormAddRepository</h1>
+        </>
+      );
+    };
 
-### Deployment
+    export default FormAddRepository;
+    ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Sampai pada titik ini kita sudah selesai untuk membuat Dummy Component, selanjutnya kita akan mencoba untuk membuat Routingnya dan menampilkan seluruh dummy component yang dibuat.
 
-### `npm run build` fails to minify
+#### Langkah 2.2 - Routing
+Pada langkah ini kita akan membuat routing yang dideklarasikan seluruhnya pada `index.js`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. Sekarang kita akan mendefinisikan route yang ada pada aplikasi yang dibuat. Buka file `index.js` dan modifikasi kode menjadi sebagai berikut:
+    ```JSX
+    import React from "react";
+    import ReactDOM from "react-dom/client";
+    // import './index.css';
+
+    import App from "./App";
+    import ListRepositories from "./containers/ListRepositories";
+    import FormAddRepository from "./containers/FormAddRepository";
+
+    import reportWebVitals from "./reportWebVitals";
+
+    // import react router dom
+    import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(
+      <React.StrictMode>
+        {/* <App /> */}
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<App />}>
+              <Route path="/list" element={<ListRepositories />} />
+              <Route path="/add" element={<FormAddRepository />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </React.StrictMode>
+    );
+
+    // If you want to start measuring performance in your app, pass a function
+    // to log results (for example: reportWebVitals(console.log))
+    // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+    reportWebVitals();
+    ```
+1. Selanjutnya kita akan menambahkan komponen `NavBar` pada `App.js` dan membuat `App.js` bisa menampilkan rute anakannya (`Child Route`). Buka file `App.js` dan modifikasi kode menjadi sebagai berikut:
+    ```JSX
+    import React from "react";
+    // import logo from './logo.svg';
+    // import './App.css';
+
+    import { Outlet } from "react-router-dom";
+    import NavBar from "./components/NavBar";
+
+    function App() {
+      return (
+        <div className="App">
+          <NavBar />
+          <Outlet />
+        </div>
+      );
+    }
+
+    export default App;
+    ```
+1. Selanjutnya kita akan memodifikasi NavBar agar dapat menampilkan rute menuju `/list` dan `/add`. Buka file `/src/components/NavBar.jsx` dan modifikasi kode sebagai berikut:
+    ```jsx
+    import React from "react";
+    import { Link } from "react-router-dom";
+    import { Box, Typography } from "@mui/material";
+
+    const NavBar = () => {
+      return (
+        <>
+          <Box
+            sx={{
+              display: "flex",
+              gap: "0.5em",
+              border: "1px dashed grey",
+              p: 2,
+              justifyContent: "space-between",
+            }}
+          >
+            <Box>
+              <Typography variant="h5">Github Apps</Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                gap: "0.5em",
+              }}
+            >
+              <Link to="/list">
+                <Typography variant="body2">List</Typography>
+              </Link>
+              <Link to="/add">
+                <Typography variant="body2">Add</Typography>
+              </Link>
+            </Box>
+          </Box>
+        </>
+      );
+    };
+
+    export default NavBar;
+    ```
+
+#### Langkah 2.3
+
+
+### Langkah 3 - Wiring React dengan API Github dengan Axios
+
+Untuk membaca tentang API dari Github dapat membuka dokumentasi yang ada di sini yah:
+- [Getting Started](https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api)
+- [Listing Repos](https://docs.github.com/en/rest/repos/repos#list-repositories-for-the-authenticated-user)
+- [Buat Repo Baru](https://docs.github.com/en/rest/repos/repos#create-a-repository-for-the-authenticated-user)

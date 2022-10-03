@@ -1,13 +1,28 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+// import './index.css';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import App from "./App";
+import ListRepositories from "./containers/ListRepositories";
+import FormAddRepository from "./containers/FormAddRepository";
+
+import reportWebVitals from "./reportWebVitals";
+
+// import react router dom
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    {/* <App /> */}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />}>
+          <Route path="/list" element={<ListRepositories />} />
+          <Route path="/add" element={<FormAddRepository />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
 
