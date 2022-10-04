@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import {
   Box,
@@ -10,7 +10,27 @@ import {
   Typography,
 } from "@mui/material";
 
+import githubInstance from "../apis/github";
+import { useGithub } from "../contexts/GithubProvider";
+
 const ListRepositories = () => {
+  const { repositories, setRepositories } = useGithub();
+
+  useEffect(() => {
+    const fetchGithubRepo = async () => {
+      const { data } = await githubInstance.get("/user/repos");
+      setRepositories(data);
+    };
+
+    fetchGithubRepo();
+
+    // Karena di sini kita tidak ingin memasukkan deps list apapun
+    // padahal di sini kita ada mendeclare penggunaan setRepositories dan repositories
+    // sehingga harus menggunakan eslint comment untuk disable exhaustive-deps
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <Box sx={{ border: "1px dashed grey", p: 2, marginTop: 2 }}>
@@ -33,15 +53,25 @@ const ListRepositories = () => {
           </TableHead>
           <TableBody>
             {/* Ini nanti bisa dijadikan Component bila diperlukan */}
-            <TableRow>
-              <TableCell align="center">1</TableCell>
-              <TableCell align="center">Dummy</TableCell>
-              <TableCell align="center">Public</TableCell>
-              <TableCell align="center" l>
-                2000-01-01
-              </TableCell>
-              <TableCell align="center">Click Me</TableCell>
-            </TableRow>
+            {repositories.map((repository) => (
+              <TableRow key={repository.id}>
+                <TableCell align="center">{repository.id}</TableCell>
+                <TableCell align="center">{repository.name}</TableCell>
+                <TableCell align="center">
+                  {repository.private ? "Private" : "Public"}
+                </TableCell>
+                <TableCell align="center">{repository.created_at}</TableCell>
+                <TableCell align="center">
+                  <a
+                    target="_blank"
+                    rel="noreferrer"
+                    href={repository.html_url}
+                  >
+                    Click Me
+                  </a>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </Box>

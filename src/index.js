@@ -6,6 +6,9 @@ import App from "./App";
 import ListRepositories from "./containers/ListRepositories";
 import FormAddRepository from "./containers/FormAddRepository";
 
+// Import GithubProvider di sini
+import { GithubProvider } from "./contexts/GithubProvider";
+
 import reportWebVitals from "./reportWebVitals";
 
 // import react router dom
@@ -15,14 +18,16 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     {/* <App /> */}
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route path="/list" element={<ListRepositories />} />
-          <Route path="/add" element={<FormAddRepository />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <GithubProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />}>
+            <Route path="/list" element={<ListRepositories />} />
+            <Route path="/add" element={<FormAddRepository />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </GithubProvider>
   </React.StrictMode>
 );
 

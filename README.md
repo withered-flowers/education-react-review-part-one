@@ -440,9 +440,7 @@ Langkah pengerjaannya adalah:
                   <TableCell align="center">1</TableCell>
                   <TableCell align="center">Dummy</TableCell>
                   <TableCell align="center">Public</TableCell>
-                  <TableCell align="center" l>
-                    2000-01-01
-                  </TableCell>
+                  <TableCell align="center">2000-01-01</TableCell>
                   <TableCell align="center">Click Me</TableCell>
                 </TableRow>
               </TableBody>
@@ -576,8 +574,8 @@ Langkah pengerjaannya adalah:
             >
               <InputLabel id="status-label">Status</InputLabel>
               <Select label="Status" labelId="status-label" id="status">
-                <MenuItem value={"false"}>Public</MenuItem>
-                <MenuItem value={"true"}>Private</MenuItem>
+                <MenuItem value={false}>Public</MenuItem>
+                <MenuItem value={true}>Private</MenuItem>
               </Select>
               <TextField fullWidth label="Nama Repository" />
               <Button variant="contained" size="large">
@@ -607,7 +605,7 @@ Langkah pengerjaannya adalah:
     } from "@mui/material";
 
     const FormAddRepository = () => {
-      const [repoStatus, setRepoStatus] = useState("false"); // set awalnya jadi public
+      const [repoStatus, setRepoStatus] = useState(false); // set awalnya jadi public
       const [repoName, setRepoName] = useState("");
 
       const textFieldOnChangeHandler = (evt) => {
@@ -651,8 +649,8 @@ Langkah pengerjaannya adalah:
                   value={repoStatus}
                   onChange={selectOnChangeHandler}
                 >
-                  <MenuItem value={"false"}>Public</MenuItem>
-                  <MenuItem value={"true"}>Private</MenuItem>
+                  <MenuItem value={false}>Public</MenuItem>
+                  <MenuItem value={true}>Private</MenuItem>
                 </Select>
                 <TextField
                   fullWidth
@@ -720,3 +718,294 @@ Langkah pembuatannya adalah sebagai berikut:
 Sampai di langkah ini artinya kita sudah membuat koneksi ke Github via axios instance ini. Selanjutnya kita akan menyelesaikannya dengan menghubungkannya dengan aplikasi React yang dibuat
 
 ### Langkah 4 - Wiring dengan React
+Pada langkah ini kita akan mencoba untuk Wiring API Github yang sudah dibuat dengan Aplikasi React yang kita buat.
+
+Karena ada kemungkinan data dari API Github ini akan digunakan bisa lebih dari 1 Component, maka ada baiknya kita buatnya dalam bentuk Context saja.
+
+Langkah pembuatan Wiring nya adalah sebagai berikut:
+
+1. Buat file `/src/contexts/GithubProvider.jsx`
+1. Di dalam file ini kita akan membuat Component `GithubProvider` yang nanti akan di-slot-kan (`HOC`) ke dalam file `index.js` dan sebuah custom hooks dengan nama `useGithub` yang berisi context tersebut. Modifikasi kode menjadi sebagai berikut:
+    ```JSX
+    import React, { createContext, useState, useContext } from "react";
+
+    const GithubContext = createContext();
+
+    const GithubProvider = ({ children }) => {
+      const [repositories, setRepositories] = useState([]);
+
+      // Sebenarnya bisa saja bila kita ingin membuatnya di sini (useEffect call API Github)
+      // Tapi di sini kita akan ignore hal tersebut
+
+      return (
+        // Ceritanya di sini kita akan memprovide state dan setter state yang digunakan
+        // dalam useState yang ada di atas ke dalam Provider
+        <GithubContext.Provider value={{ repositories, setRepositories }}>
+          {children}
+        </GithubContext.Provider>
+      );
+    };
+
+    // Gunakan custom Hooks di sini
+    const useGithub = () => {
+      const context = useContext(GithubContext);
+
+      // cek bila undefined
+      if (context === undefined) {
+        throw new Error("useGithub wajib dipakai di dalam GithubProvider !");
+      }
+
+      return context;
+    };
+
+    export { GithubProvider, useGithub };
+    ```
+1. Selanjutnya kita akan membungkus `index.js` (`BrowserRouter`) supaya bisa menggunakan Provider yang disiapkan (`GithubProvider`)
+1. Buka file `index.js` kemudian modifikasi kode sebagai berikut
+    ```JSX
+    import React from "react";
+    import ReactDOM from "react-dom/client";
+    // import './index.css';
+
+    import App from "./App";
+    import ListRepositories from "./containers/ListRepositories";
+    import FormAddRepository from "./containers/FormAddRepository";
+
+    // Import GithubProvider di sini
+    import { GithubProvider } from "./contexts/GithubProvider";
+
+    import reportWebVitals from "./reportWebVitals";
+
+    // import react router dom
+    import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(
+      <React.StrictMode>
+        {/* <App /> */}
+        <GithubProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<App />}>
+                <Route path="/list" element={<ListRepositories />} />
+                <Route path="/add" element={<FormAddRepository />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </GithubProvider>
+      </React.StrictMode>
+    );
+
+    // If you want to start measuring performance in your app, pass a function
+    // to log results (for example: reportWebVitals(console.log))
+    // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+    reportWebVitals();
+    ```
+1. Setelah menggunakan Provider tersebut, selanjutnya kita akan menggunakan context tersebut (`useGithub`) di dalam component yang akan menggunakannya `ListRepositories.jsx`.
+1. Buka kembali file `ListRepositories.jsx` dan modifikasi kode sebagai berikut
+    ```JSX
+    import React, { useEffect } from "react";
+
+    import {
+      Box,
+      Table,
+      TableBody,
+      TableCell,
+      TableHead,
+      TableRow,
+      Typography,
+    } from "@mui/material";
+
+    import githubInstance from "../apis/github";
+    import { useGithub } from "../contexts/GithubProvider";
+
+    const ListRepositories = () => {
+      const { repositories, setRepositories } = useGithub();
+
+      useEffect(() => {
+        const fetchGithubRepo = async () => {
+          const { data } = await githubInstance.get("/user/repos");
+          setRepositories(data);
+        };
+
+        fetchGithubRepo();
+
+        // Karena di sini kita tidak ingin memasukkan deps list apapun
+        // padahal di sini kita ada mendeclare penggunaan setRepositories dan repositories
+        // sehingga harus menggunakan eslint comment untuk disable exhaustive-deps
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
+
+      return (
+        <>
+          <Box sx={{ border: "1px dashed grey", p: 2, marginTop: 2 }}>
+            <Typography variant="h5">Repositoriku Apa Saja?</Typography>
+
+            <Table
+              sx={{
+                minWidth: 768,
+              }}
+              aria-label="simple table"
+            >
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">Id</TableCell>
+                  <TableCell align="center">Name</TableCell>
+                  <TableCell align="center">Status</TableCell>
+                  <TableCell align="center">Creation Time</TableCell>
+                  <TableCell align="center">Go To Repo</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* Ini nanti bisa dijadikan Component bila diperlukan */}
+                {repositories.map((repository) => (
+                  <TableRow key={repository.id}>
+                    <TableCell align="center">{repository.id}</TableCell>
+                    <TableCell align="center">{repository.name}</TableCell>
+                    <TableCell align="center">
+                      {repository.private ? "Private" : "Public"}
+                    </TableCell>
+                    <TableCell align="center">{repository.created_at}</TableCell>
+                    <TableCell align="center">
+                      <a
+                        target="_blank"
+                        rel="noreferrer"
+                        href={repository.html_url}
+                      >
+                        Click Me
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
+        </>
+      );
+    };
+
+    export default ListRepositories;
+    ```
+1. Sampai di titik ini, apabila aplikasi dijalankan dengan baik, seharunsya kode sudah dapat menampilkan Listing dari repository seorang user tertentu, selanjutnya kita akan melanjutkan untuk mengkoneksikan form dengan axios instance yang sudah dibuat agar dapat membuat suatu repository yang baru pada Github.
+1. Buka kembali file `/src/containers/FormAddRepository.jsx` dan modifikasi kode sebagai berikut:
+    ```JSX
+    import React, { useState } from "react";
+
+    import {
+      Box,
+      Button,
+      TextField,
+      Typography,
+      FormControl,
+      Select,
+      InputLabel,
+      MenuItem,
+      Snackbar,
+    } from "@mui/material";
+
+    import githubInstance from "../apis/github";
+
+    const FormAddRepository = () => {
+      const [repoStatus, setRepoStatus] = useState(false); // set awalnya jadi public
+      const [repoName, setRepoName] = useState("");
+      const [open, setOpen] = React.useState(false);
+
+      const handleClick = () => {
+        setOpen(true);
+      };
+
+      const handleClose = (event, reason) => {
+        if (reason === "clickaway") {
+          return;
+        }
+
+        setOpen(false);
+      };
+
+      const textFieldOnChangeHandler = (evt) => {
+        setRepoName(evt.target.value);
+      };
+
+      const selectOnChangeHandler = (evt) => {
+        setRepoStatus(evt.target.value);
+      };
+
+      const formOnSubmitHandler = async (evt) => {
+        evt.preventDefault();
+        console.log(repoStatus, repoName);
+
+        // POST /repositories
+        const { data } = await githubInstance.post("/user/repos", {
+          name: repoName,
+          private: repoStatus,
+          gitignore_template: "Node",
+          license_template: "mit",
+        });
+
+        console.log(data);
+        handleClick();
+      };
+
+      return (
+        <>
+          <Box
+            sx={{
+              border: "1px dashed grey",
+              p: 2,
+              marginTop: 2,
+            }}
+          >
+            <Typography variant="h5">Nambah Repo Baru Yuk</Typography>
+            <form onSubmit={formOnSubmitHandler}>
+              <FormControl
+                fullWidth
+                sx={{
+                  marginTop: "1em",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5em",
+                }}
+              >
+                <InputLabel id="status-label">Status</InputLabel>
+                <Select
+                  label="Status"
+                  labelId="status-label"
+                  id="status"
+                  value={repoStatus}
+                  onChange={selectOnChangeHandler}
+                >
+                  <MenuItem value={false}>Public</MenuItem>
+                  <MenuItem value={true}>Private</MenuItem>
+                </Select>
+                <TextField
+                  fullWidth
+                  label="Nama Repository"
+                  value={repoName}
+                  onChange={textFieldOnChangeHandler}
+                />
+                <Button variant="contained" size="large" type="submit">
+                  Submit
+                </Button>
+              </FormControl>
+            </form>
+
+            <Snackbar
+              open={open}
+              autoHideDuration={2000}
+              onClose={handleClose}
+              message={"Repo baru terbuat dengan baik"}
+            />
+          </Box>
+        </>
+      );
+    };
+
+    export default FormAddRepository;
+    ```
+
+Dan sampai di sini, aplikasi yang dibuat seluruhnya sudah dapat berjalan dengan baik dan review kita untuk materi React part 1 ini sudah selesai !
+
+*Sebenarnya kode ini masih banyak yang bisa dimodifikasi supaya menjadi lebih baik lagi, mis: dengan menggunakan useReducer dan lain lainnya.
+
+Yuk tetap belajar yah !

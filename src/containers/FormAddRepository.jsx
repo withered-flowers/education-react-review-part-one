@@ -9,11 +9,27 @@ import {
   Select,
   InputLabel,
   MenuItem,
+  Snackbar,
 } from "@mui/material";
 
+import githubInstance from "../apis/github";
+
 const FormAddRepository = () => {
-  const [repoStatus, setRepoStatus] = useState("false"); // set awalnya jadi public
+  const [repoStatus, setRepoStatus] = useState(false); // set awalnya jadi public
   const [repoName, setRepoName] = useState("");
+  const [open, setOpen] = React.useState(false);
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
 
   const textFieldOnChangeHandler = (evt) => {
     setRepoName(evt.target.value);
@@ -23,9 +39,20 @@ const FormAddRepository = () => {
     setRepoStatus(evt.target.value);
   };
 
-  const formOnSubmitHandler = (evt) => {
+  const formOnSubmitHandler = async (evt) => {
     evt.preventDefault();
     console.log(repoStatus, repoName);
+
+    // POST /repositories
+    const { data } = await githubInstance.post("/user/repos", {
+      name: repoName,
+      private: repoStatus,
+      gitignore_template: "Node",
+      license_template: "mit",
+    });
+
+    console.log(data);
+    handleClick();
   };
 
   return (
@@ -56,8 +83,8 @@ const FormAddRepository = () => {
               value={repoStatus}
               onChange={selectOnChangeHandler}
             >
-              <MenuItem value={"false"}>Public</MenuItem>
-              <MenuItem value={"true"}>Private</MenuItem>
+              <MenuItem value={false}>Public</MenuItem>
+              <MenuItem value={true}>Private</MenuItem>
             </Select>
             <TextField
               fullWidth
@@ -70,6 +97,13 @@ const FormAddRepository = () => {
             </Button>
           </FormControl>
         </form>
+
+        <Snackbar
+          open={open}
+          autoHideDuration={2000}
+          onClose={handleClose}
+          message={"Repo baru terbuat dengan baik"}
+        />
       </Box>
     </>
   );
